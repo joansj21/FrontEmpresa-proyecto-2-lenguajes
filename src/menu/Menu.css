@@ -1,0 +1,37 @@
+
+
+.close-btn{
+
+    margin-left: auto; /* Esto empujará el botón a la esquina izquierda */
+    padding-right: 2rem; /* Añade un poco de espacio entre el borde y el botón */
+
+
+}
+
+
+
+.content {
+    background-color: #333;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+  }
+
+  .insert-btn{
+
+    margin-right: auto; /* Esto empujará el botón a la esquina izquierda */
+    padding-left: 2rem; /* Añade un poco de espacio entre el borde y el botón */
+
+  }
+
+
+  .session-btn {
+    padding: 0.5rem 1rem;
+    background: #4d4d4d;
+    color: white;
+    border: none;
+    border-radius: 30px;
+    font-weight: 600;
+    cursor: pointer;
+   
+}
