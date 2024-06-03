@@ -8,7 +8,7 @@ import Menu from "../menu/Menu";
 
 function Login(props) {
    
-    const baseUrl="http://localhost/proyecto2Api/";
+    const baseUrl="http://localhost/proyecto2Api/controller/empresaController.php";
     const nameRef = useRef(null);
     const passRef = useRef(null);
     
@@ -49,6 +49,13 @@ function Login(props) {
             "login":response.data.message,
             "id":response.data.idEmpresa,
             "clave_temporal":parseInt(response.data.claveTemporal),
+
+            "cedula":response.data.cedula,
+            "direccion":response.data.direccion,
+            
+            "fechaCreacion":response.data.fechaCreacion,
+            "nombre":response.data.nombre,
+            "telefono":response.data.telefono,
             
         }));
 
@@ -148,23 +155,23 @@ function Login(props) {
                     <div className="form-group">
                             <label>Cédula: </label>
                             <br />
-                            <input type="text" className="form-control" name="cedula" onChange={handleChange} />
+                            <input type="text" className="form-control" name="cedula" value={empresa.cedula} onChange={handleChange} />
                             <br />
                             <label>Dirección: </label>
                             <br />
-                            <input type="text" className="form-control" name="direccion" onChange={handleChange} />
+                            <input type="text" className="form-control" name="direccion" value={empresa.direccion}  onChange={handleChange} />
                             <br />
                             <label>Fecha de Creación: </label>
                             <br />
-                            <input type="text" className="form-control" name="fechaCreacion" onChange={handleChange} />
+                            <input type="date" className="form-control" name="fechaCreacion"  value={empresa.fechaCreacion}  onChange={handleChange} />
                             <br />
                             <label>Nombre: </label>
                             <br />
-                            <input type="text" className="form-control" name="nombre" onChange={handleChange} />
+                            <input type="text" className="form-control" name="nombre"  value={empresa.nombre} onChange={handleChange} />
                             <br />
                             <label>Teléfono: </label>
                             <br />
-                            <input type="text" className="form-control" name="telefono" onChange={handleChange} />
+                            <input type="text" className="form-control" name="telefono"  value={empresa.telefono}  onChange={handleChange} />
                             <br />
                             <label>Nueva Contraseña: </label>
                             <br />

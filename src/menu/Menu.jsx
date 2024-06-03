@@ -1,21 +1,37 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import './Menu.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import {Modal, ModalBody, ModalFooter, ModalHeader} from 'reactstrap';
+import { FormGroup, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 import axios from 'axios';
+import Promociones from "../promociones/Promociones";
+import { Cloudinary } from '@cloudinary/url-gen';
+import { AdvancedImage } from '@cloudinary/react';
+
+import { auto } from '@cloudinary/url-gen/actions/resize';
+import { autoGravity } from '@cloudinary/url-gen/qualifiers/gravity';
+
+
+const cld = new Cloudinary({ cloud: { cloudName: 'dng82zchm' } });
 
 function Menu(props) {
 
     const {empresa,setEmpresa}=props;
 
-    const baseUrlEmpresa="http://localhost/proyecto2Api/";
-    const baseUrlCupon="http://localhost/proyecto2Api/cupon.php";
+    const baseUrlEmpresa="http://localhost/proyecto2Api/controller/empresaController.php";
+    const baseUrlCupon="http://localhost/proyecto2Api/controller/cuponController.php";
+    const baseUrlCategoria="http://localhost/proyecto2Api/controller/categoriasController.php";
+    const baseUrlCuponImage="http://localhost/proyecto2Api/controller/imageController.php";
 
     const [update,setUpdate] = useState(false);
     const [modalInsertar, setModalInsertar]= useState(false);
     const [modalEditar, setModalEditar]= useState(false);
+    const [modalImage, setModalImage]= useState(false);
+
   const [modalEliminar, setModalEliminar]= useState(false);
   const [data, setData]=useState([]);
+  const [categorias, setCategoria]=useState([]);
+
+  const [openPromociones,setOpenPromociones] = useState(false);
 
 
    
@@ -25,14 +41,142 @@ function Menu(props) {
         "id":0,
         "empresa_id":empresa.id,
         "nombre":"",
-        "descripcion":"",
+        "ubicacion":"",
         "activo":true,
         "fecha_creacion":"",
-        "fecha_expira":""
+        "fecha_expira":"",
+        "fecha_inicio":"",
+        "categoria_id":"",
+        "img":"",
+        "precio":0,
+
+
 
 
     
     });
+
+    const salirSeccion=()=>{
+
+      setEmpresa({
+        "id":0,
+        "cedula":"",
+        "direccion":"",
+        "clave_temporal":0,
+        "activo":false,
+        "fechaCreacion":"",
+        "nombre":"",
+        "telefono":"",
+        "newpass":"",
+        "login":false
+
+    })
+    }
+
+    /*----------imagen------------- */
+    const [imageUrl, setImageUrl] = useState(null);
+    
+    const[image,setImage]=useState("");
+   
+    
+      const [transformedImage, setTransformedImage] = useState("");
+      const [error, setError] = useState(null);
+    
+      const uploadImage = async (e) => {
+        const files = e.target.files;
+        const data = new FormData();
+        data.append("file", files[0]);
+        data.append("upload_preset", "images"); // Asegúrate de que "images" coincide con el nombre del preset que creaste
+    
+        try {
+          const res = await fetch(
+            "https://api.cloudinary.com/v1_1/dng82zchm/image/upload",
+            {
+              method: "POST",
+              body: data,
+            }
+          );
+    
+          if (!res.ok) {
+            const errorData = await res.json();
+            setError(`Error: ${errorData.error.message}`);
+            throw new Error(`Error: ${errorData.error.message}`);
+          }
+    
+          const file = await res.json();
+          setImage(file.secure_url);
+    
+        
+        } catch (error) {
+          console.error('Error uploading the image:', error);
+        }
+      };
+    
+    
+    //const cld = new Cloudinary({ cloud: { cloudName: 'dng82zchm' } });
+
+
+
+       // Define cld outside the function
+       
+       /*const uploadImage = async (file) => {
+        
+        try {
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("upload_preset", "your_upload_preset"); // Reemplazar con tu upload preset de Cloudinary
+    
+          const response = await axios.post(
+            `https://api.cloudinary.com/v1_1/dng82zchm/image/upload`,
+            formData
+          );
+    
+          const imageUrl = response.data.secure_url;
+          setImageUrl(imageUrl);
+        } catch (error) {
+          console.error('Error al subir la imagen:', error);
+        }
+      };
+    
+      const handleFileSelect = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+          uploadImage(file);
+        }
+      };*/
+ 
+
+
+
+   
+  
+    
+
+    const peticionPostImage=async()=>{
+
+      console.log(cupon)
+
+      var f = new FormData();
+      f.append("id", cupon.id);
+      f.append("url",image);
+
+      f.append("METHOD", "POST");
+
+  
+      await axios.post(baseUrlCuponImage, f)
+      .then(response=>{
+        //setData(data.concat(response.data));
+        console.log(response)
+        
+        abrirCerrarModalImage();
+        //peticionGet();
+
+      }).catch(error=>{
+        console.log(error);
+      })
+    }
+
+    /*---------------------------------- */
 
     const abrirCerrarModalInsertar=()=>{
         setModalInsertar(!modalInsertar);
@@ -44,6 +188,18 @@ function Menu(props) {
     
       const abrirCerrarModalEliminar=()=>{
         setModalEliminar(!modalEliminar);
+      }
+
+      const abrirCerrarModalImage=()=>{
+        setModalImage(!modalImage);
+      }
+
+      const OpenPromociones=(cupon)=>{
+        
+        setCupon(cupon);
+     
+        setOpenPromociones(!openPromociones);
+      
       }
     
 
@@ -81,17 +237,6 @@ function Menu(props) {
         console.log(cupon);
     };
 
-
-    const handleChangeCuponCheckUpdate = () => {
-        
-      setCupon(prevState => ({
-          ...prevState,
-          "activo":parseInt(cupon.activo)===0?1:0,
-
-          
-      }));
-      console.log(cupon);
-  };
 
 
 
@@ -131,10 +276,14 @@ function Menu(props) {
         f.append("id", cupon.id);
         f.append("empresa_id",cupon.empresa_id);
         f.append("nombre",cupon.nombre );
-        f.append("descripcion", cupon.descripcion);
+        f.append("ubicacion", cupon.ubicacion);
         f.append("fecha_expira", cupon.fecha_expira);
         f.append("activo", cupon.activo ?0:1);
+        f.append("precio", cupon.precio);
        
+        f.append("categoria", cupon.categoria_id);
+        f.append("fecha_inicio", cupon.fecha_inicio);
+
 
         f.append("METHOD", "POST");
 
@@ -155,14 +304,19 @@ function Menu(props) {
 
 
       const peticionPut=async()=>{
+    
         var f = new FormData();
         f.append("id", cupon.id);
         f.append("empresa_id",cupon.empresa_id);
         f.append("nombre",cupon.nombre );
-        f.append("descripcion", cupon.descripcion);
+        f.append("ubicacion", cupon.ubicacion);
         f.append("fecha_expira", cupon.fecha_expira);
-        f.append("activo", cupon.activo ?0:1);
        
+        f.append("activo", cupon.activo ?0:1);
+        f.append("precio", cupon.precio);
+       
+        f.append("categoria", cupon.categoria_id);
+        f.append("fecha_inicio", cupon.fecha_inicio);
         f.append("METHOD", "PUT");
         
         await axios.post(baseUrlCupon, f, {params: {id: cupon.id}})
@@ -214,6 +368,23 @@ function Menu(props) {
       }
 
 
+      const peticionGetCategoria=async()=>{
+        await axios.get(baseUrlCategoria)
+        .then(response=>{
+          //console.log(response.data);
+          setCategoria(response.data);
+        }).catch(error=>{
+          console.log(error);
+        })
+      }
+
+      const getCategoriaNombre = (id) => {
+       // console.log(categorias);
+
+        const categoria = categorias.find(cat =>  cat.id === id);
+        return categoria ? categoria.categoria : 'Categoría no encontrada';
+      };
+
 
       const seleccionarCupon=(cupon,caso)=>{
         setCupon(cupon);
@@ -224,8 +395,41 @@ function Menu(props) {
        
       }
 
+      const seleccionarCuponImagen=(cupon)=>{
+        setCupon(cupon);
+        getImageCupon(cupon.id);
+        abrirCerrarModalImage()
+    
+       
+      }
+
+      const getImageCupon=async(id)=>{
+        await axios.get(`${baseUrlCuponImage}?id=${id}`)
+        .then(response=>{
+          const firstCuponUrl = response.data[0]?.urlImg || "";
+
+          setCupon(prevState => ({
+            ...prevState,
+            "img": firstCuponUrl,
+        }));
+
+          
+         /*setCupon({
+          ...cupon,
+           "img": firstCuponUrl,
+
+         })*/
+        }).catch(error=>{
+          console.log(error);
+        })
+      }
+
+
+  
+
       useEffect(()=>{
         peticionGet();
+        peticionGetCategoria();
       },[])
     
 
@@ -238,20 +442,7 @@ function Menu(props) {
 
         <div className="content">
 
-                <div className="insert-btn" >
                
-                <button className="session-btn" onClick={()=>abrirCerrarModalInsertar()}>Insertar</button>
-
-                </div>
-                <div className="close-btn">
-
-
-                    <button className="session-btn" onClick={()=>onOpenUpdate()} >Modificar Empresa</button>
-                    <button className="session-btn" >Salir</button>
-
-
-
-                </div>
 
 
               
@@ -261,25 +452,25 @@ function Menu(props) {
                     <ModalHeader>Modificar Datos Empresa</ModalHeader>
                     <ModalBody>
                     <div className="form-group">
-                            <label>Cédula: </label>
+                           <label>Cédula: </label>
                             <br />
-                            <input type="text" className="form-control" name="cedula" onChange={handleChange} />
+                            <input type="text" className="form-control" name="cedula" value={empresa.cedula} onChange={handleChange} />
                             <br />
                             <label>Dirección: </label>
                             <br />
-                            <input type="text" className="form-control" name="direccion" onChange={handleChange} />
+                            <input type="text" className="form-control" name="direccion" value={empresa.direccion}  onChange={handleChange} />
                             <br />
                             <label>Fecha de Creación: </label>
                             <br />
-                            <input type="text" className="form-control" name="fechaCreacion" onChange={handleChange} />
+                            <input type="date" className="form-control" name="fechaCreacion"  value={empresa.fechaCreacion}  onChange={handleChange} />
                             <br />
                             <label>Nombre: </label>
                             <br />
-                            <input type="text" className="form-control" name="nombre" onChange={handleChange} />
+                            <input type="text" className="form-control" name="nombre"  value={empresa.nombre} onChange={handleChange} />
                             <br />
                             <label>Teléfono: </label>
                             <br />
-                            <input type="text" className="form-control" name="telefono" onChange={handleChange} />
+                            <input type="text" className="form-control" name="telefono"  value={empresa.telefono}  onChange={handleChange} />
                             <br />
                             <label>Nueva Contraseña: </label>
                             <br />
@@ -305,11 +496,38 @@ function Menu(props) {
                             <br />
                             <label>Descripcion: </label>
                             <br />
-                            <input type="text" className="form-control" name="descripcion" onChange={handleChangeCupon} />
+                            <input type="text" className="form-control" name="ubicacion" onChange={handleChangeCupon} />
                             <br />
-
+                            <label> Precio </label>
+                            <br />
+                            <input type="number"className="form-control"name="precio"step="0.01"min="0"onChange={handleChangeCupon}/>
+                            <br />
+                            <br />
+                            <label>Fecha Finalizacion </label>
+                            <br />
                             <input type="date" className="form-control" name="fecha_expira" onChange={handleChangeCupon} />
                             <br />
+                            <label>Fecha Inicio </label>
+                            <br />
+                            <input type="date" className="form-control" name="fecha_inicio" onChange={handleChangeCupon} />
+                            <br />
+
+                            <br />
+                                  <label>Categoría: </label>
+                                  <br />
+                                  <select className="form-control" name="categoria_id"onChange={handleChangeCupon} value={cupon.categoria_id}
+                                  >
+                                    <option value="">Seleccione una categoría</option>{categorias.map((categoria) => (
+                                      <option key={categoria.id} value={categoria.id}>
+                                        {categoria.categoria}
+                                      </option>
+                                    ))}
+                                  </select>
+
+
+
+
+
                             <p>Cupon esta {cupon.activo ? "Activo" : "No activo"}</p>
                             <button className="session-btn" onClick={()=>handleChangeCuponCheck()}>Cambiar Estado</button>
                            
@@ -327,21 +545,50 @@ function Menu(props) {
                 <Modal isOpen={modalEditar}>
                     <ModalHeader>Editar cupon</ModalHeader>
                     <ModalBody>
-                        <div className="form-group">
+
+
+
+                    <div className="form-group">
                         <label>Nombre: </label>
                             <br />
-                            <input type="text" className="form-control" name="nombre" value={cupon.nombre} onChange={handleChangeCupon} />
+                            <input type="text" className="form-control" name="nombre"  value={cupon.nombre} onChange={handleChangeCupon} />
                             <br />
                             <label>Descripcion: </label>
                             <br />
-                            <input type="text" className="form-control" name="descripcion" value={cupon.descripcion} onChange={handleChangeCupon} />
+                            <input type="text" className="form-control" name="ubicacion"   value={cupon.ubicacion} onChange={handleChangeCupon} />
+                            <br />
                             <br />
                             <label>Fecha Finalizacion </label>
                             <br />
-                            <input type="date" className="form-control" name="fecha_expira" value={cupon.fecha_expira} onChange={handleChangeCupon} />
+                            <input type="date" className="form-control" name="fecha_expira" onChange={handleChangeCupon} />
                             <br />
-                            <p>Cupon esta {parseInt(cupon.activo)===0 ? "Activo" : "No activo"}</p>
-                            <button className="session-btn" onClick={()=>handleChangeCuponCheckUpdate()}>Cambiar Estado</button>
+                            <label> Precio </label>
+                            <br />
+                            <input type="number"className="form-control"name="precio"step="0.01"min="0"onChange={handleChangeCupon}/>
+                            <br />
+                            <label>Fecha Inicio </label>
+                            <br />
+                            <input type="date" className="form-control" name="fecha_inicio" onChange={handleChangeCupon} />
+                            <br />
+
+                            <br />
+                                  <label>Categoría: </label>
+                                  <br />
+                                  <select className="form-control" name="categoria_id"onChange={handleChangeCupon} value={cupon.categoria_id}
+                                  >
+                                    <option value="">Seleccione una categoría</option>{categorias.map((categoria) => (
+                                      <option key={categoria.id} value={categoria.id}>
+                                        {categoria.categoria}
+                                      </option>
+                                    ))}
+                                  </select>
+
+
+
+
+
+                           <p>Cupon esta {parseInt(cupon.activo)===0 ? "Activo" : "No activo"}</p>
+                            <button className="session-btn" onClick={()=>handleChangeCuponCheck()}>Cambiar Estado</button>
                            
                            
                             <br />
@@ -350,6 +597,48 @@ function Menu(props) {
                     <ModalFooter>
                         <button className="btn btn-primary" onClick={()=>peticionPut()}>Insertar</button>{"   "}
                         <button className="btn btn-danger" onClick={()=>abrirCerrarModalEditar()}>Cancelar</button>
+                    </ModalFooter>
+                </Modal>
+
+
+
+
+
+
+
+
+
+
+
+                <Modal isOpen={modalImage}>
+                    <ModalHeader>Imagen cupon</ModalHeader>
+                    <ModalBody>
+                    <div>
+                    <label>Imagen </label>
+
+                    {cupon.img ? (
+                            <img src={cupon.img} alt="Imagen del cupón" style={{ maxWidth: "100%", height: "auto" }} />
+
+                          ) : (
+                            <p>No hay imagen disponible para este cupón</p>
+                          )}
+
+                    
+
+                    <br />
+                          <FormGroup>
+                            
+                               <input type="file" name="file" placeholder="subir imagen" onChange={uploadImage} ></input>
+                            </FormGroup>
+
+                      </div>
+
+
+                  
+                    </ModalBody>
+                    <ModalFooter>
+                        <button className="btn btn-primary" onClick={()=>peticionPostImage()}>Insertar</button>{"   "}
+                        <button className="btn btn-danger" onClick={()=>abrirCerrarModalImage()}>Cancelar</button>
                     </ModalFooter>
                 </Modal>
 
@@ -383,28 +672,55 @@ function Menu(props) {
         </div>
     
     
-        <div>
+        { !openPromociones &&<div >
+
+          
+          <div className="content">
+          <div className="insert-btn" >
+               
+               <button className="session-btn" onClick={()=>abrirCerrarModalInsertar()}>Insertar</button>
+
+               </div>
+               <div className="close-btn">
+
+
+                   <button className="session-btn" onClick={()=>onOpenUpdate()} >Modificar Empresa</button>
+                   <button className="session-btn" onClick={salirSeccion}>Salir</button>
+
+
+
+               </div>
+               </div>
                 <table className="table table-striped">
                     <thead>
                         <tr>
                         <th>Nombre</th>
-                        <th>Descripcion</th>
+                        <th>Ubicacion</th>
                         <th>Creacion</th>
+                        <th>Precio</th>
                         <th>Expira</th>
+                        <th>Inicio</th>
+                        <th>Categoria</th>
                         <th>Activo</th>
+
                         </tr>
                     </thead>
                     <tbody>
                         {data.map(cupon=>(
                         <tr key={cupon.id}>
                             <td>{cupon.nombre}</td>
-                            <td>{cupon.descripcion}</td>
+                            <td>{cupon.ubicacion}</td>
                             <td>{cupon.fecha_creacion}</td>
+                            <td>{cupon.precio}</td>
                             <td>{new Date(cupon.fecha_expira) < new Date() ? 'Vencida' : cupon.fecha_expira}</td>
+                            <td>{cupon.fecha_inicio}</td>
+                            <td>{getCategoriaNombre(cupon.categoria)}</td>
                             <td>{parseInt(cupon.activo) === 0 ?"Activo" : "No activo"}</td>
                         <td>
                         <button className="btn btn-primary" onClick={()=>seleccionarCupon(cupon, "Desabilitar")}>{parseInt(cupon.activo) === 0 ?"Desactivar" : "Activar"}</button> {"  "}
-                        <button className="btn btn-danger"  onClick={()=>seleccionarCupon(cupon, "Editar")} >Editar</button>
+                        <button className="btn btn-danger"  onClick={()=>seleccionarCupon(cupon, "Editar")} >Editar</button>{"  "}
+                        <button className="btn btn-danger"  onClick={()=>seleccionarCuponImagen(cupon)} >Imagen</button>{"  "}
+                        <button className="btn btn-primary"  onClick={()=>OpenPromociones(cupon)} >Promociones</button>
                         </td>
                         </tr>
                         ))}
@@ -415,10 +731,18 @@ function Menu(props) {
                 </table>
 
 
-                </div>
+                </div>}
     
     
     
+                {openPromociones && 
+
+                        <div >
+                            <Promociones cupon={cupon} setCupon={setCupon}  openPromociones={openPromociones} setOpenPromociones= {setOpenPromociones}></Promociones>
+                        </div>
+
+                                    
+                  }
     
     </div>   
 
