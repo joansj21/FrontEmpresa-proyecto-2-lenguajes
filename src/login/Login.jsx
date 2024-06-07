@@ -11,6 +11,7 @@ function Login(props) {
     const baseUrl="http://localhost/proyecto2Api/controller/empresaController.php";
     const nameRef = useRef(null);
     const passRef = useRef(null);
+    const [error,setError] = useState("");
     
     const [empresa, setEmpresa] = useState({
         "id":0,
@@ -64,6 +65,8 @@ function Login(props) {
           
           
         } catch (error) {
+            setError("Error Credenciales no validas");
+            
           console.log(error);
         }
       };
@@ -79,17 +82,25 @@ function Login(props) {
         console.log(empresa);
     };
 
+    function formatFechaCreacion(fechaCreacion) {
+        const fecha = new Date(fechaCreacion);
+        const dia = String(fecha.getDate()).padStart(2, '0');
+        const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+        const año = fecha.getFullYear();
+        return `${dia}-${mes}-${año}`;
+    }
+
     const onChangeEmpresaData = async () => {
         try {
             console.log(empresa);
             // Crear un objeto con los datos de la empresa a actualizar
-
+            const fechaCreacionFormateada = formatFechaCreacion(empresa.fechaCreacion);
             var f = new FormData();
         
             // Agregar los valores de los campos de texto al FormData
             f.append("cedula", empresa.cedula);
             f.append("direccion", empresa.direccion);
-            f.append("fecha_creacion",empresa.fechaCreacion);
+            f.append("fecha_creacion", fechaCreacionFormateada);
             f.append("nombre", empresa.nombre);
             f.append("telefono", empresa.telefono);
             f.append("contraseña", empresa.newpass);
@@ -107,9 +118,11 @@ function Login(props) {
                 
             }));
     
-            console.log(response.data);
-            console.log(empresa);
+            //console.log(response.data);
+            //console.log(empresa);
         } catch (error) {
+
+            
             console.log(error);
         }
     }
@@ -140,6 +153,8 @@ function Login(props) {
                              <input ref={passRef} type="password" name="pass" id="pass"/>
                          </div>
                         <button className="main-btn" onClick={e => onLogin(e)}>Entrar</button>
+
+                        <p>{error}</p>
 
                     
                </div>

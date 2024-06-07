@@ -26,16 +26,10 @@ function Menu(props) {
     const [modalInsertar, setModalInsertar]= useState(false);
     const [modalEditar, setModalEditar]= useState(false);
     const [modalImage, setModalImage]= useState(false);
-
-  const [modalEliminar, setModalEliminar]= useState(false);
-  const [data, setData]=useState([]);
-  const [categorias, setCategoria]=useState([]);
-
-  const [openPromociones,setOpenPromociones] = useState(false);
-
-
-   
-
+    const [modalEliminar, setModalEliminar]= useState(false);
+    const [data, setData]=useState([]);
+    const [categorias, setCategoria]=useState([]);
+    const [openPromociones,setOpenPromociones] = useState(false);
 
     const [cupon, setCupon] = useState({
         "id":0,
@@ -49,15 +43,9 @@ function Menu(props) {
         "categoria_id":"",
         "img":"",
         "precio":0,
-
-
-
-
-    
     });
 
     const salirSeccion=()=>{
-
       setEmpresa({
         "id":0,
         "cedula":"",
@@ -72,6 +60,22 @@ function Menu(props) {
 
     })
     }
+
+    const [empresaUpdate, setEmpresaUpdate] = useState({
+      "id":0,
+      
+     
+      "clave_temporal":0,
+      "activo":false,
+      "login":false,
+      "cedula":empresa.cedula,
+      "direccion":empresa.direccion,
+      "fechaCreacion":empresa.fechaCreacion,
+      "nombre":empresa.nombre,
+      "telefono":empresa.telefono,
+      "newpass":empresa.newpass,
+
+  })
 
     /*----------imagen------------- */
     const [imageUrl, setImageUrl] = useState(null);
@@ -111,46 +115,6 @@ function Menu(props) {
           console.error('Error uploading the image:', error);
         }
       };
-    
-    
-    //const cld = new Cloudinary({ cloud: { cloudName: 'dng82zchm' } });
-
-
-
-       // Define cld outside the function
-       
-       /*const uploadImage = async (file) => {
-        
-        try {
-          const formData = new FormData();
-          formData.append("file", file);
-          formData.append("upload_preset", "your_upload_preset"); // Reemplazar con tu upload preset de Cloudinary
-    
-          const response = await axios.post(
-            `https://api.cloudinary.com/v1_1/dng82zchm/image/upload`,
-            formData
-          );
-    
-          const imageUrl = response.data.secure_url;
-          setImageUrl(imageUrl);
-        } catch (error) {
-          console.error('Error al subir la imagen:', error);
-        }
-      };
-    
-      const handleFileSelect = (event) => {
-        const file = event.target.files[0];
-        if (file) {
-          uploadImage(file);
-        }
-      };*/
- 
-
-
-
-   
-  
-    
 
     const peticionPostImage=async()=>{
 
@@ -194,12 +158,9 @@ function Menu(props) {
         setModalImage(!modalImage);
       }
 
-      const OpenPromociones=(cupon)=>{
-        
+      const OpenPromociones=(cupon)=>{ 
         setCupon(cupon);
-     
         setOpenPromociones(!openPromociones);
-      
       }
     
 
@@ -210,7 +171,7 @@ function Menu(props) {
 
     const handleChange = e => {
         const { name, value } = e.target;
-        setEmpresa(prevState => ({
+        setEmpresaUpdate(prevState => ({
             ...prevState,
             [name]: value
         }));
@@ -239,19 +200,31 @@ function Menu(props) {
 
 
 
-
+ 
     const onChangeEmpresaData = async () => {
         try {
+        
+          console.log(empresaUpdate.fechaCreacion)
+          const fechaFormateada = new Date(empresaUpdate.fechaCreacion).toLocaleDateString('es-ES', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+
+        console.log(fechaFormateada)
+         
 
             var f = new FormData();
+            
+            
         
             // Agregar los valores de los campos de texto al FormData
-            f.append("cedula", empresa.cedula);
-            f.append("direccion", empresa.direccion);
-            f.append("fecha_creacion",empresa.fechaCreacion);
-            f.append("nombre", empresa.nombre);
-            f.append("telefono", empresa.telefono);
-            f.append("contraseña", empresa.newpass);
+            f.append("cedula", empresaUpdate.cedula);
+            f.append("direccion", empresaUpdate.direccion);
+            f.append("fecha_creacion", fechaFormateada);
+            f.append("nombre", empresaUpdate.nombre);
+            f.append("telefono", empresaUpdate.telefono);
+            f.append("contraseña", empresaUpdate.newpass);
             f.append("temporal", false);
             f.append("empresa", true);
             f.append("METHOD", "PUT");
@@ -260,9 +233,30 @@ function Menu(props) {
             const response = await axios.post(baseUrlEmpresa, f, {params: {id: empresa.id}});
 
             setUpdate(!update)
-    
-            console.log(response.data);
-            console.log(empresa);
+           
+            
+
+            if(response.data.error){
+              alert(response.data.error);
+
+              setEmpresaUpdate(prevState => ({
+                ...prevState,
+                "cedula":empresa.cedula,
+                "direccion":empresa.direccion,
+                "fechaCreacion":empresa.fechaCreacion,
+                "nombre":empresa.nombre,
+                "telefono":empresa.telefono,
+                "newpass":empresa.newpass,
+                
+            }));
+
+            }else{
+              alert("Cambios Realizados con exito")
+            }
+            
+
+            /*console.log(response.data);
+            console.log(empresa);*/
         } catch (error) {
             console.log(error);
         }
@@ -279,8 +273,7 @@ function Menu(props) {
         f.append("ubicacion", cupon.ubicacion);
         f.append("fecha_expira", cupon.fecha_expira);
         f.append("activo", cupon.activo ?0:1);
-        f.append("precio", cupon.precio);
-       
+        f.append("precio", cupon.precio); 
         f.append("categoria", cupon.categoria_id);
         f.append("fecha_inicio", cupon.fecha_inicio);
 
@@ -291,7 +284,8 @@ function Menu(props) {
         await axios.post(baseUrlCupon, f)
         .then(response=>{
           //setData(data.concat(response.data));
-          console.log(response)
+          console.log(response);
+          
           
           abrirCerrarModalInsertar();
           peticionGet();
@@ -310,11 +304,9 @@ function Menu(props) {
         f.append("empresa_id",cupon.empresa_id);
         f.append("nombre",cupon.nombre );
         f.append("ubicacion", cupon.ubicacion);
-        f.append("fecha_expira", cupon.fecha_expira);
-       
+        f.append("fecha_expira", cupon.fecha_expira); 
         f.append("activo", cupon.activo ?0:1);
         f.append("precio", cupon.precio);
-       
         f.append("categoria", cupon.categoria_id);
         f.append("fecha_inicio", cupon.fecha_inicio);
         f.append("METHOD", "PUT");
@@ -326,14 +318,15 @@ function Menu(props) {
       
           abrirCerrarModalEditar();
 
+          
+
         }).catch(error=>{
-          console.log(error);
+          alert(error)
+          
         })
       }
       /*------------------------------------------- */
 
-    
-    
       
       const peticionDelete = async () => {
         setCupon(prevCupon => {
@@ -412,13 +405,6 @@ function Menu(props) {
             ...prevState,
             "img": firstCuponUrl,
         }));
-
-          
-         /*setCupon({
-          ...cupon,
-           "img": firstCuponUrl,
-
-         })*/
         }).catch(error=>{
           console.log(error);
         })
@@ -439,38 +425,30 @@ function Menu(props) {
 
     return(
     <div>
-
         <div className="content">
-
-               
-
-
-              
-
-
                 <Modal isOpen={update}>
                     <ModalHeader>Modificar Datos Empresa</ModalHeader>
                     <ModalBody>
                     <div className="form-group">
                            <label>Cédula: </label>
                             <br />
-                            <input type="text" className="form-control" name="cedula" value={empresa.cedula} onChange={handleChange} />
+                            <input type="text" className="form-control" name="cedula" value={empresaUpdate.cedula} onChange={handleChange} />
                             <br />
                             <label>Dirección: </label>
                             <br />
-                            <input type="text" className="form-control" name="direccion" value={empresa.direccion}  onChange={handleChange} />
+                            <input type="text" className="form-control" name="direccion" value={empresaUpdate.direccion}  onChange={handleChange} />
                             <br />
                             <label>Fecha de Creación: </label>
                             <br />
-                            <input type="date" className="form-control" name="fechaCreacion"  value={empresa.fechaCreacion}  onChange={handleChange} />
+                            <input type="date" className="form-control" name="fechaCreacion"  value={empresaUpdate.fechaCreacion}  onChange={handleChange} />
                             <br />
                             <label>Nombre: </label>
                             <br />
-                            <input type="text" className="form-control" name="nombre"  value={empresa.nombre} onChange={handleChange} />
+                            <input type="text" className="form-control" name="nombre"  value={empresaUpdate.nombre} onChange={handleChange} />
                             <br />
                             <label>Teléfono: </label>
                             <br />
-                            <input type="text" className="form-control" name="telefono"  value={empresa.telefono}  onChange={handleChange} />
+                            <input type="text" className="form-control" name="telefono"  value={empresaUpdate.telefono}  onChange={handleChange} />
                             <br />
                             <label>Nueva Contraseña: </label>
                             <br />
@@ -480,11 +458,9 @@ function Menu(props) {
                     </ModalBody>
                     <ModalFooter>
                     <button className="btn btn-primary" onClick={(e) => onChangeEmpresaData(e)}>Enviar</button>{"   "}
-                    <button className="session-btn" onClick={e => onOpenUpdate(e)} >Cancelar</button>
-                        
+                    <button className="session-btn" onClick={e => onOpenUpdate(e)} >Cancelar</button>      
                     </ModalFooter>
                 </Modal>
-
 
                 <Modal isOpen={modalInsertar}>
                     <ModalHeader>Insertar cupon</ModalHeader>
@@ -511,7 +487,6 @@ function Menu(props) {
                             <br />
                             <input type="date" className="form-control" name="fecha_inicio" onChange={handleChangeCupon} />
                             <br />
-
                             <br />
                                   <label>Categoría: </label>
                                   <br />
@@ -523,15 +498,8 @@ function Menu(props) {
                                       </option>
                                     ))}
                                   </select>
-
-
-
-
-
                             <p>Cupon esta {cupon.activo ? "Activo" : "No activo"}</p>
                             <button className="session-btn" onClick={()=>handleChangeCuponCheck()}>Cambiar Estado</button>
-                           
-                           
                             <br />
                         </div>
                     </ModalBody>
@@ -582,11 +550,6 @@ function Menu(props) {
                                       </option>
                                     ))}
                                   </select>
-
-
-
-
-
                            <p>Cupon esta {parseInt(cupon.activo)===0 ? "Activo" : "No activo"}</p>
                             <button className="session-btn" onClick={()=>handleChangeCuponCheck()}>Cambiar Estado</button>
                            
@@ -600,50 +563,23 @@ function Menu(props) {
                     </ModalFooter>
                 </Modal>
 
-
-
-
-
-
-
-
-
-
-
                 <Modal isOpen={modalImage}>
                     <ModalHeader>Imagen cupon</ModalHeader>
                     <ModalBody>
                     <div>
                     <label>Imagen </label>
-
                     {cupon.img ? (
-                            <img src={cupon.img} alt="Imagen del cupón" style={{ maxWidth: "100%", height: "auto" }} />
-
-                          ) : (
-                            <p>No hay imagen disponible para este cupón</p>
-                          )}
-
-                    
-
-                    <br />
+                            <img src={cupon.img} alt="Imagen del cupón" style={{ maxWidth: "100%", height: "auto" }} />) : (<p>No hay imagen disponible para este cupón</p> )}<br />
                           <FormGroup>
-                            
                                <input type="file" name="file" placeholder="subir imagen" onChange={uploadImage} ></input>
                             </FormGroup>
-
                       </div>
-
-
-                  
                     </ModalBody>
                     <ModalFooter>
                         <button className="btn btn-primary" onClick={()=>peticionPostImage()}>Insertar</button>{"   "}
                         <button className="btn btn-danger" onClick={()=>abrirCerrarModalImage()}>Cancelar</button>
                     </ModalFooter>
                 </Modal>
-
-
-
 
                 <Modal isOpen={modalEliminar}>
                             <ModalBody>
@@ -661,36 +597,19 @@ function Menu(props) {
                             </button>
                             </ModalFooter>
                 </Modal>
-
-
-
-
-
-
-
-
         </div>
-    
-    
+  
         { !openPromociones &&<div >
-
-          
           <div className="content">
-          <div className="insert-btn" >
-               
-               <button className="session-btn" onClick={()=>abrirCerrarModalInsertar()}>Insertar</button>
+            <div className="insert-btn" >
+                <button className="session-btn" onClick={()=>abrirCerrarModalInsertar()}>Insertar</button>
+            </div>
+                <div className="close-btn">
+                    <button className="session-btn" onClick={()=>onOpenUpdate()} >Modificar Empresa</button>
+                    <button className="session-btn" onClick={salirSeccion}>Salir</button>
+                </div>
 
-               </div>
-               <div className="close-btn">
-
-
-                   <button className="session-btn" onClick={()=>onOpenUpdate()} >Modificar Empresa</button>
-                   <button className="session-btn" onClick={salirSeccion}>Salir</button>
-
-
-
-               </div>
-               </div>
+          </div>
                 <table className="table table-striped">
                     <thead>
                         <tr>
@@ -702,7 +621,6 @@ function Menu(props) {
                         <th>Inicio</th>
                         <th>Categoria</th>
                         <th>Activo</th>
-
                         </tr>
                     </thead>
                     <tbody>
@@ -724,24 +642,15 @@ function Menu(props) {
                         </td>
                         </tr>
                         ))}
-
-
                     </tbody> 
-
                 </table>
-
-
                 </div>}
-    
-    
-    
                 {openPromociones && 
 
                         <div >
                             <Promociones cupon={cupon} setCupon={setCupon}  openPromociones={openPromociones} setOpenPromociones= {setOpenPromociones}></Promociones>
                         </div>
-
-                                    
+                
                   }
     
     </div>   
